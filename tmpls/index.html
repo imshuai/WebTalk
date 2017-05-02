@@ -24,6 +24,7 @@
       });
       
       c.onmessage = function(msg){
+        console.log(msg);
         if(msg.data=="control:ping"){
           c.send("control:pong")
           console.log("recive a ping msg, send back a pong msg")
