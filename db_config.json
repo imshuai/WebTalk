@@ -1,0 +1,8 @@
+{
+    "db_address":"database_ip_address_or_domain",
+    "db_port":3306,
+    "db_user":"database_user_name",
+    "db_passwd":"database_user_password",
+    "db_name":"database_name",
+    "charset":"utf8"
+}
