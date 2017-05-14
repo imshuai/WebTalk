@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/imshuai/wshelper"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -16,10 +15,10 @@ func main() {
 	})
 
 	e.GET("/user/login/:nickname", func(c *gin.Context) {
-		wsh := wshelper.NewWebSocketHelper(1024, 1024)
-		wsh.KeepAlive = true
-
-		wsh.StartHandle(c.Writer, c.Request)
+		u := UserOnline(c.Param("nickname"))
+		users.Add(u)
+		u.Session.KeepAlive = true
+		u.Session.StartHandle(c.Writer, c.Request)
 	})
 
 	e.Run("localhost:8080")

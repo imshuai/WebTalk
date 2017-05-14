@@ -1,10 +1,11 @@
 package main
 
 import (
-	"errors"
 	"io"
 	"log"
 	"time"
+
+	"encoding/json"
 
 	"github.com/imshuai/wshelper"
 )
@@ -20,8 +21,8 @@ type User struct {
 	Session       *wshelper.WebSocketHelper `xorm:"-"`
 }
 
-//NewUser 新建一个用户
-func NewUser(nickname string) *User {
+//newUser 新建一个用户
+func newUser(nickname string) *User {
 	u := &User{
 		NickName:      nickname,
 		IsOnline:      false,
@@ -46,11 +47,11 @@ func UserOnline(nickname string) *User {
 	}
 	if !exist {
 		LogInfo("get user", nickname, "from database fail, user does not exist")
-		return nil
+		u = newUser(nickname)
 	}
 	u.IsOnline = true
 	u.LastLoginTime = time.Now()
-	_, err = db.AllCols().Update(u)
+	_, err = db.Cols("is_online", "last_login_time").Update(u)
 	if err != nil {
 		LogError("update user into database fail with error:", err)
 		return nil
@@ -78,8 +79,9 @@ func UserOnline(nickname string) *User {
 
 //Offline 处理用户下线
 func (u *User) Offline() (bool, error) {
+	users.Delete(u)
 	u.IsOnline = false
-	_, err := db.UseBool("is_online").Update(u)
+	_, err := db.Cols("is_online").Update(u)
 	if err != nil {
 		LogError("update user into database fail with error:", err)
 		return false, err
@@ -87,24 +89,16 @@ func (u *User) Offline() (bool, error) {
 	return true, nil
 }
 
-//SendMessageTo 发送消息到指定的用户
-func (u *User) SendMessageTo(nickname string, msg []byte) (bool, error) {
-	t := new(User)
-	exist, err := db.Where("`nick_name`=?", nickname).Get(t)
+func (u *User) reciveMsg(msg *Message) bool {
+	strMsg, err := json.Marshal(msg)
 	if err != nil {
-		LogError("get user from database fail with error:", err)
-		return false, err
+		LogError("message marshal fail with error:", err)
+		return false
 	}
-	if !exist {
-		LogInfo("get user", nickname, "from database fail, user does not exist")
-		return false, errors.New("send message to " + nickname + " fail, user does not exist")
+	err = u.Session.WriteMessage(wshelper.TextMessage, string(strMsg))
+	if err != nil {
+		LogError(u.NickName, "recive message from", msg.Author, "fail with error:", err)
+		return false
 	}
-	if !t.reciveMsg(msg) {
-		return false, errors.New("user " + nickname + "cannot recive message, maybe he is not online")
-	}
-	return true, nil
-}
-
-func (u *User) reciveMsg(msg []byte) bool {
-	return false
+	return true
 }

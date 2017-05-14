@@ -7,6 +7,7 @@
 _obj
 _test
 .vscode
+logs
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -17,7 +18,7 @@ _test
 _cgo_defun.c
 _cgo_gotypes.go
 _cgo_export.*
-
+db_config.1.json
 _testmain.go
 debug
 *.exe

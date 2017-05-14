@@ -66,7 +66,7 @@ func readConfigFormFile() (dbConfig, error) {
 	if err != nil {
 		log.Fatalln("read database config file db_config.json fail with error:", err)
 	}
-	if err := config.Check(); err == nil {
+	if err := config.Check(); err != nil {
 		return dbConfig{}, err
 	}
 	return config, nil

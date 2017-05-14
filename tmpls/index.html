@@ -1,47 +1,62 @@
 <html>
-  <head>
-    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-  </head>
 
-  <body>
+<head>
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+</head>
+
+<body>
+    <input type="text" name="nickname" value="">
+    <button id="connect">connect</button>
+    <br>
+    <input type="text" name="sendto" value="">
+    <input type="text" name="msg" value="">
     <button id="send">send</button>
     <button id="close">close</button>
     <h3>WebSocket Go</h3>
     <pre id="output"></pre>
 
     <script>
-      url = 'ws://127.0.0.1:8080/ws';
-      c = new WebSocket(url);
-      
-      $('#send').click(function(){
-        $("#output").append((new Date())+ " ==> msg\n")
-        c.send("msg")
-      });
+        $('#connect').click(function() {
+            url = 'ws://127.0.0.1:8080/user/login/' + $('input[name="nickname"]').val();
+            c = new WebSocket(url);
 
-      $('#close').click(function(){
-        $("#output").empty();
-        c.close();
-      });
-      
-      c.onmessage = function(msg){
-        console.log(msg);
-        if(msg.data=="control:ping"){
-          c.send("control:pong")
-          console.log("recive a ping msg, send back a pong msg")
-        }else if(msg.data=="control:pong"){
-            console.log("recive a pong msg, connection still alive")
-        }else{
-          $("#output").append((new Date())+ " <== "+msg.data+"\n")
-          console.log(msg)
-        }
-      }
+            $('#send').click(function() {
+                $("#output").append((new Date()) + " ==> " + $('input[name="msg"]').val() + "\n")
+                msg = new Object();
+                msg.author = $('input[name="nickname"]').val();
+                msg.content = $('input[name="msg"]').val();
+                msg.sendto = $('input[name="sendto"]').val();
+                msg.timestamp = (new Date()).toUTCString();
+                c.send(JSON.stringify(msg));
+            });
 
-      c.onopen = function(){
-        setInterval( 
-          function(){ c.send("control:ping") }
-        , 5000 )
-      }
+            $('#close').click(function() {
+                $("#output").empty();
+                c.close();
+            });
+
+            c.onmessage = function(msg) {
+                if (msg.data == "control:ping") {
+                    c.send("control:pong")
+                    console.log("recive a ping msg, send back a pong msg")
+                } else if (msg.data == "control:pong") {
+                    console.log("recive a pong msg, connection still alive")
+                } else {
+                    $("#output").append((new Date()) + " <== " + JSON.parse(msg.data).content + "\n")
+                    console.log(msg)
+                }
+            }
+
+            c.onopen = function() {
+                setInterval(
+                    function() {
+                        c.send("control:ping")
+                    }, 5000)
+            }
+
+        });
     </script>
 
-  </body>
+</body>
+
 </html>
