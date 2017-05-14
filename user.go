@@ -2,7 +2,11 @@ package main
 
 import (
 	"errors"
+	"io"
+	"log"
 	"time"
+
+	"github.com/imshuai/wshelper"
 )
 
 //User 定义用户信息
@@ -13,7 +17,7 @@ type User struct {
 	CreateTime    time.Time `xorm:"created"`
 	LastLoginTime time.Time
 	Friends       []int64
-	Session       map[string]string `xorm:"-"`
+	Session       *wshelper.WebSocketHelper `xorm:"-"`
 }
 
 //NewUser 新建一个用户
@@ -51,7 +55,36 @@ func UserOnline(nickname string) *User {
 		LogError("update user into database fail with error:", err)
 		return nil
 	}
+	u.Session = wshelper.NewWebSocketHelper(1024, 1024)
+	u.Session.CloseHandleFunc = func(code int, text string) error {
+		log.Println("user closed connection with code[", code, "] and text[", text, "]")
+		u.Offline()
+		return nil
+	}
+	u.Session.PingHandleFunc = func(pingMsg string) error {
+		return u.Session.WriteControl(wshelper.PingMessage, []byte(pingMsg), time.Now().Add(time.Second))
+	}
+	u.Session.PongHandleFunc = func(pongMsg string) error {
+		return u.Session.WriteControl(wshelper.PingMessage, []byte(pongMsg), time.Now().Add(time.Second))
+	}
+	u.Session.TextMsgHandleFunc = MessageHandler
+	u.Session.StreamMsgHandleFunc = func(r io.Reader) error {
+		pr, pw := io.Pipe()
+		io.Copy(io.Writer(pw), r)
+		return u.Session.WriteMessage(wshelper.StreamMessage, io.Reader(pr))
+	}
 	return u
+}
+
+//Offline 处理用户下线
+func (u *User) Offline() (bool, error) {
+	u.IsOnline = false
+	_, err := db.UseBool("is_online").Update(u)
+	if err != nil {
+		LogError("update user into database fail with error:", err)
+		return false, err
+	}
+	return true, nil
 }
 
 //SendMessageTo 发送消息到指定的用户
