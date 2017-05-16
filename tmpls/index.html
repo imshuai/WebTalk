@@ -1,62 +1,43 @@
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 
 <head>
-    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title Page</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-    <input type="text" name="nickname" value="">
-    <button id="connect">connect</button>
-    <br>
-    <input type="text" name="sendto" value="">
-    <input type="text" name="msg" value="">
-    <button id="send">send</button>
-    <button id="close">close</button>
-    <h3>WebSocket Go</h3>
-    <pre id="output"></pre>
-
-    <script>
-        $('#connect').click(function() {
-            url = 'ws://127.0.0.1:8080/user/login/' + $('input[name="nickname"]').val();
-            c = new WebSocket(url);
-
-            $('#send').click(function() {
-                $("#output").append((new Date()) + " ==> " + $('input[name="msg"]').val() + "\n")
-                msg = new Object();
-                msg.author = $('input[name="nickname"]').val();
-                msg.content = $('input[name="msg"]').val();
-                msg.sendto = $('input[name="sendto"]').val();
-                msg.timestamp = (new Date()).toUTCString();
-                c.send(JSON.stringify(msg));
-            });
-
-            $('#close').click(function() {
-                $("#output").empty();
-                c.close();
-            });
-
-            c.onmessage = function(msg) {
-                if (msg.data == "control:ping") {
-                    c.send("control:pong")
-                    console.log("recive a ping msg, send back a pong msg")
-                } else if (msg.data == "control:pong") {
-                    console.log("recive a pong msg, connection still alive")
-                } else {
-                    $("#output").append((new Date()) + " <== " + JSON.parse(msg.data).content + "\n")
-                    console.log(msg)
-                }
-            }
-
-            c.onopen = function() {
-                setInterval(
-                    function() {
-                        c.send("control:ping")
-                    }, 5000)
-            }
-
-        });
-    </script>
-
+    <input type="text" name="nickname"></input><button id="connect">connect</button><br>
+    <input type="text" name="sendto"></input>
+    <div id="talk-button"><span class="glyphicon glyphicon-globe"></span></div>
+    <div id="talk-list" class="list-hidden">
+        <div class="chat-title">chat title <span class="glyphicon glyphicon-remove pull-right" id="chat-close"></span></div>
+        <div class="chat-content">
+        </div>
+        <div class="chat-editor">
+            <textarea placeholder="输入信息，Ctrl+Enter发送"></textarea>
+        </div>
+    </div>
+    <!-- jQuery -->
+    <script src="http://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="Hello World"></script>
+    <script src="/static/js/common.js"></script>
 </body>
 
 </html>

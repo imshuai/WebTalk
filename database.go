@@ -57,7 +57,7 @@ func (c dbConfig) Check() error {
 }
 
 func readConfigFormFile() (dbConfig, error) {
-	bs, err := ioutil.ReadFile("db_config.json")
+	bs, err := ioutil.ReadFile("db_config.1.json")
 	if err != nil {
 		log.Fatalln("read database config file db_config.json fail with error:", err)
 	}

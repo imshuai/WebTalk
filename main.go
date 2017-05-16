@@ -9,6 +9,7 @@ func main() {
 
 	e := gin.Default()
 	e.LoadHTMLFiles("./tmpls/index.html")
+	e.Static("/statics", "./statics")
 
 	e.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
